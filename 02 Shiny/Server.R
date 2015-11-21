@@ -64,8 +64,9 @@ shinyServer(function(input, output, session) {
     })
     
     output$distPlot3 <- renderPlot({
+      KPI1 <- reactive({input$KPI1})
       kpi_func <- function(count){
-        if(count>5000){
+        if(count>KPI1()){
           kpi = "High Death Count"
         }
         else{
