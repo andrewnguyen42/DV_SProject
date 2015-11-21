@@ -9,8 +9,9 @@ dashboardPage(
   ),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Scatter", tabName = "scatter", icon = icon("dashboard")),
-      menuItem("Barchart", tabName = "Barchart")
+      menuItem("Scatter", tabName = "scatter"),
+      menuItem("Barchart", tabName = "Barchart"),
+      menuItem("Crosstab", tabName = "Crosstab")
     )
   ),
   dashboardBody(
@@ -23,6 +24,10 @@ dashboardPage(
       tabItem(tabName = "Barchart",
               actionButton(inputId = "clicks1",  label = "Click me"),
               plotOutput("distPlot2")
+      ),
+      tabItem(tabName = "Crosstab",
+              actionButton(inputId = "clicks1",  label = "Click me"),
+              plotOutput("distPlot3")
       )
     )
   )

@@ -62,6 +62,30 @@ shinyServer(function(input, output, session) {
       theme(axis.text.x = element_text(size=7))
       plot
     })
+    
+    output$distPlot3 <- renderPlot({
+      kpi_func <- function(count){
+        if(count>5000){
+          kpi = "High Death Count"
+        }
+        else{
+          kpi ="Low Death Count"
+        }
+        return(kpi)
+      }
+      
+      
+      dff <-  group_by(df1(),CAUSE_OF_DEATH,ETHNICITY) %>% summarise(sumcount=sum(COUNT)) %>% ungroup() %>% rowwise() %>% mutate(Death_KPI=kpi_func(sumcount)) %>% group_by(CAUSE_OF_DEATH,ETHNICITY)
+      
+      dff$CAUSE_OF_DEATH = with(dff,factor(CAUSE_OF_DEATH, levels = rev(levels(CAUSE_OF_DEATH))))
+      
+      plot<-ggplot(dff, aes(ETHNICITY,CAUSE_OF_DEATH,color=Death_KPI)) + 
+        theme_bw() + xlab("") + ylab("") +
+        scale_size_continuous(range=c(10,30)) + 
+        geom_text(aes(label=sumcount))
+      plot
+      
+    })
     # End your code here.
     return(plot)
   }) # output$distPlot
