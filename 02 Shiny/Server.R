@@ -47,7 +47,7 @@ shinyServer(function(input, output, session) {
     output$distPlot2 <- renderPlot({
       dff <- group_by(df1(),CAUSE_OF_DEATH) %>% summarise(sumcount = sum(COUNT)) %>% filter(sumcount>5000) %>% arrange(CAUSE_OF_DEATH)
       
-      levels(dff$CAUSE_OF_DEATH) <- gsub(" ", "\n",levels(df$CAUSE_OF_DEATH))
+      levels(dff$CAUSE_OF_DEATH) <- gsub(" ", "\n",levels(df1()$CAUSE_OF_DEATH))
       levels(dff$CAUSE_OF_DEATH) <- gsub("IMMUNODEFICIENCY", "IMMUNO-\nDEFICIENCY",levels(dff$CAUSE_OF_DEATH))
       
       medcount = median(dff$sumcount)
