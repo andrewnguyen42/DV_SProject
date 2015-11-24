@@ -5,7 +5,7 @@ require(shinydashboard)
 require(leaflet)
 
 dashboardPage(
-  dashboardHeader(
+  dashboardHeader(title="Shiny Project 1"
   ),
   dashboardSidebar(
     sidebarMenu(
@@ -18,25 +18,21 @@ dashboardPage(
     tabItems(
       # First tab content
       tabItem(tabName = "scatter",
-              sidebarPanel(
-              actionButton(inputId = "clicks1",  label = "Click me"),
+              actionButton(inputId = "clicks1",  label = "Update Data"),
               plotOutput("distPlot1")
-              )
+              
       ),
       tabItem(tabName = "Barchart",
-              actionButton(inputId = "clicks1",  label = "Click me"),
+              radioButtons(inputId="reference", label="Reference Line:",choices = c("Median:"=1,"Mean"=2)),
+              sliderInput("mincount","Minimum Death Count",min=1,max=50000,value=5000),
               plotOutput("distPlot2")
       ),
 
       tabItem(tabName = "Crosstab",
-        sidebarPanel(
-        sliderInput("KPI1", "KPI_Low_Max_value:", 
+        sliderInput("KPI1", "Death Count KPI", 
                    min = 1, max = 100000,  value = 5000),
-        textInput(inputId = "title", 
-                 label = "Crosstab Title",
-                 value = "Crosstab"),
               plotOutput("distPlot3")
-        )
+        
       )
 
     )

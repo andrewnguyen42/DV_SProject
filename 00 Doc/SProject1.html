@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Tableau Project 2 Documentation</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h1>Tableau Project 2 Documentation</h1>
+
+<p>Note that this html file contains the combined &ldquo;story&rdquo; for Projects 4  and 5. The Tableau
+plots in the &ldquo;Data&rdquo; section are from project 4, while all the R plots, as well as the 
+&ldquo;Blended&rdquo; plots are from Project 5.</p>
+
+<h2>Extract, Transform, and load:</h2>
+
+<p>This has been covered in our previous documentation of the same data, but I&#39;m adding it
+here anyway for the purpose of completeness.</p>
+
+<p>The first step in our project was to load the data onto Oracle in a usable format.
+We separated the columns into numerical and non-numerical types, using  3 versions of R_ETL.R for each csv file. 
+Our data was mostly well-behaved, so there wasn&#39;t much more to do here</p>
+
+<pre><code>file_path &lt;- &quot;./01 Data/New_York_City_Leading_Causes_of_Death.csv&quot;
+
+df &lt;- read.csv(file_path, stringsAsFactors = FALSE)
+
+
+# Replace &quot;.&quot; (i.e., period) with &quot;_&quot; in the column names.
+names(df) &lt;- gsub(&quot;\\.+&quot;, &quot;_&quot;, names(df))
+names(df)
+df &lt;- rename(df, Game = G)
+
+
+
+# str(df) # Uncomment this and  run just the lines to here to get column types to use for getting the list of measures.
+
+measures &lt;- c(&quot;Year&quot;,&quot;Count&quot;,&quot;Percent&quot;)
+
+
+#measures &lt;- NA # Do this if there are no measures.
+
+# Get rid of special characters in each column.
+# Google ASCII Table to understand the following:
+for(n in names(df)) {
+  df[n] &lt;- data.frame(lapply(df[n], gsub, pattern=&quot;[^ -~]&quot;,replacement= &quot;&quot;))
+}
+
+dimensions &lt;- setdiff(names(df), measures)
+if( length(measures) &gt; 1 || ! is.na(dimensions)) {
+  for(d in dimensions) {
+    # Get rid of &quot; and &#39; in dimensions.
+    df[d] &lt;- data.frame(lapply(df[d], gsub, pattern=&quot;[\&quot;&#39;]&quot;,replacement= &quot;&quot;))
+    # Change &amp; to and in dimensions.
+    df[d] &lt;- data.frame(lapply(df[d], gsub, pattern=&quot;&amp;&quot;,replacement= &quot; and &quot;))
+    # Change : to ; in dimensions.
+    df[d] &lt;- data.frame(lapply(df[d], gsub, pattern=&quot;:&quot;,replacement= &quot;;&quot;))
+  }
+}
+
+library(lubridate)
+
+# The following is an example of dealing with special cases like making state abbreviations be all upper case.
+# df[&quot;State&quot;] &lt;- data.frame(lapply(df[&quot;State&quot;], toupper))
+
+# Get rid of all characters in measures except for numbers, the - sign, and period.dimensions
+if( length(measures) &gt; 1 || ! is.na(measures)) {
+  for(m in measures) {
+    df[m] &lt;- data.frame(lapply(df[m], gsub, pattern=&quot;[^--.0-9]&quot;,replacement= &quot;&quot;))
+  }
+}
+
+write.csv(df, paste(gsub(&quot;.csv&quot;, &quot;&quot;, file_path), &quot;.reformatted.csv&quot;, sep=&quot;&quot;), row.names=FALSE, na = &quot;&quot;)
+
+tableName &lt;- gsub(&quot; +&quot;, &quot;_&quot;, gsub(&quot;[^A-z, 0-9, ]&quot;, &quot;&quot;, gsub(&quot;.csv&quot;, &quot;&quot;, file_path)))
+sql &lt;- paste(&quot;CREATE TABLE&quot;, tableName, &quot;(\n-- Change table_name to the table name you want.\n&quot;)
+if( length(measures) &gt; 1 || ! is.na(dimensions)) {
+  for(d in dimensions) {
+    sql &lt;- paste(sql, paste(d, &quot;varchar2(4000),\n&quot;))
+  }
+}
+if( length(measures) &gt; 1 || ! is.na(measures)) {
+  for(m in measures) {
+    if(m != tail(measures, n=1)) sql &lt;- paste(sql, paste(m, &quot;number(38,4),\n&quot;))
+    else sql &lt;- paste(sql, paste(m, &quot;number(38,4)\n&quot;))
+  }
+}
+sql &lt;- paste(sql, &quot;);&quot;)
+cat(sql)
+</code></pre>
+
+<hr/>
+
+<h2>Visualizations</h2>
+
+<p><a href="https://internal.shinyapps.io/agent509/02Shiny/?initialWidth=1362&amp;childId=shinyapp#shiny-tab-scatter">We created a simple scatterplot</a> of death counts broken down by ethnicity over the years. No real datawrangling was necessary to generate this plot so there&#39;s not much to say about it. We have a button that&#39;s used before updating data:</p>
+
+<pre><code>    actionButton(inputId = &quot;clicks1&quot;,  label = &quot;Update Data&quot;),
+</code></pre>
+
+<p>Here&#39;s the code for generating the plot:</p>
+
+<pre><code>    output$distPlot1 &lt;- renderPlot({             
+      plot &lt;- ggplot() +
+        coord_cartesian() + 
+        scale_x_continuous() +
+        scale_y_continuous() +
+        labs(title=&quot;Death Count by Cause over Time&quot;,y=&quot;Count&quot;,x=&quot;Year&quot;,color=&quot;Ethnicity&quot;)+
+        layer(data=df1(),
+              mapping=aes(x=as.numeric(YEAR),y=as.numeric(COUNT),color=ETHNICITY),
+              stat=&quot;identity&quot;,
+              stat_params=list(),
+              geom=&quot;point&quot;,
+              geom_params=list(),
+              position=position_identity(),
+              #position = position_jitter(width=0.5, height=0)
+        )
+      plot
+    }) 
+</code></pre>
+
+<p><a href="https://internal.shinyapps.io/agent509/02Shiny/?initialWidth=1362&amp;childId=shinyapp#shiny-tab-Barchart">Next we created a barchart.</a> We used reactive with a slider bar, so that viewers can filter out causes of death with lower deaths.
+and used radiobuttons to allow viewers to select median or mean for the reference line.
+Here are the relevant portions from the UI and Server</p>
+
+<p>UI.R:</p>
+
+<pre><code>              radioButtons(inputId=&quot;reference&quot;, label=&quot;Reference Line:&quot;,choices = c(&quot;Median:&quot;=1,&quot;Mean&quot;=2)),
+              sliderInput(&quot;mincount&quot;,&quot;Minimum Death Count&quot;,min=1,max=50000,value=5000),
+</code></pre>
+
+<p>Server.R:</p>
+
+<pre><code>      mincount &lt;- reactive({input$mincount})
+      dff &lt;- group_by(df1(),CAUSE_OF_DEATH) %&gt;% summarise(sumcount = sum(COUNT)) %&gt;% filter(sumcount&gt;mincount()) %&gt;% arrange(CAUSE_OF_DEATH)
+
+      levels(dff$CAUSE_OF_DEATH) &lt;- gsub(&quot; &quot;, &quot;\n&quot;,levels(df1()$CAUSE_OF_DEATH))
+      levels(dff$CAUSE_OF_DEATH) &lt;- gsub(&quot;IMMUNODEFICIENCY&quot;, &quot;IMMUNO-\nDEFICIENCY&quot;,levels(dff$CAUSE_OF_DEATH))
+
+      medcount = median(dff$sumcount)
+      meancount = mean(dff$sumcount)
+
+      refer &lt;- reactive({input$reference})
+      if (refer()== 1){
+        reference = medcount}
+      else{
+        reference = meancount}
+</code></pre>
+
+<p>And the code that actually plots the data:</p>
+
+<pre><code>      plot &lt;- ggplot(dff, aes(x=(CAUSE_OF_DEATH),y=sumcount))+
+      geom_bar(stat=&quot;identity&quot;)+
+      geom_hline(yintercept=as.numeric(reference), color=&quot;red&quot;) +
+      labs(title=&#39;Death Counts by Cause&#39;) +
+      labs(x=&quot;Cause of Death&quot;, y=paste(&quot;Count&quot;)) +
+      theme(axis.text.x = element_text(size=7))
+      plot
+</code></pre>
+
+<p><a href="https://internal.shinyapps.io/agent509/02Shiny/_w_2610f17b/#shiny-tab-Crosstab">The crosstab</a> uses a KPI of death count retrieved from a slider, and is computed in Server.R using this code:</p>
+
+<pre><code>      KPI1 &lt;- reactive({input$KPI1})
+      kpi_func &lt;- function(count){
+        if(count&gt;KPI1()){
+          kpi = &quot;High Death Count&quot;
+        }
+        else{
+          kpi =&quot;Low Death Count&quot;
+        }
+        return(kpi)
+      }
+</code></pre>
+
+<p>The relevant code for data wrangling and plotting in the Server.R:</p>
+
+<pre><code>
+      dff &lt;-  group_by(df1(),CAUSE_OF_DEATH,ETHNICITY) %&gt;% summarise(sumcount=sum(COUNT)) %&gt;% ungroup() %&gt;% rowwise() %&gt;% mutate(Death_KPI=kpi_func(sumcount)) %&gt;% group_by(CAUSE_OF_DEATH,ETHNICITY)
+
+      dff$CAUSE_OF_DEATH = with(dff,factor(CAUSE_OF_DEATH, levels = rev(levels(CAUSE_OF_DEATH))))
+
+      plot&lt;-ggplot(dff, aes(ETHNICITY,CAUSE_OF_DEATH,color=Death_KPI)) + 
+        theme_bw() + xlab(&quot;&quot;) + ylab(&quot;&quot;) +
+        scale_size_continuous(range=c(10,30)) + 
+        geom_text(aes(label=sumcount))+
+        labs(title=&quot;Crosstab&quot;,x=&quot;Ethnicity&quot;)
+      plot
+
+    })
+    return(plot)
+  }) # output$distPlot
+</code></pre>
+
+<p>And from the UI.R:</p>
+
+<pre><code>        actionButton(inputId = &quot;clicks1&quot;, label = &quot;UpdateData&quot;),
+        sliderInput(&quot;KPI1&quot;, &quot;Death Count KPI&quot;, 
+                   min = 1, max = 100000,  value = 5000),
+</code></pre>
+
+</body>
+
+</html>
