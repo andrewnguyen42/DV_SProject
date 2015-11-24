@@ -93,6 +93,17 @@ cat(sql)
 
 --------------
 
+## Getting Data
+Since all the data wrangling was done with R, we retrieved the data for each plot using the same code:
+```
+    df1 <- eventReactive(input$clicks1, {data.frame(fromJSON(getURL(URLencode(gsub("\n", " ", 'skipper.cs.utexas.edu:5001/rest/native/?query=
+                                        "select * from NYC_DEATHS;"
+                                        ')), httpheader=c(DB='jdbc:oracle:thin:@sayonara.microlab.cs.utexas.edu:1521:orcl', USER='C##cs329e_cdt932', PASS='orcl_cdt932', 
+                                        MODE='native_mode', MODEL='model', returnDimensions = 'False', returnFor = 'JSON'), verbose = TRUE)))
+    })
+ 
+```
+
 ## Visualizations 
   [We created a simple scatterplot](https://internal.shinyapps.io/agent509/02Shiny/?initialWidth=1362&childId=shinyapp#shiny-tab-scatter) of death counts broken down by ethnicity over the years. No real datawrangling was necessary to generate this plot so there's not much to say about it. We have a button that's used before updating data:
 ```

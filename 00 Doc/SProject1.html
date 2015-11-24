@@ -248,6 +248,18 @@ cat(sql)
 
 <hr/>
 
+<h2>Getting Data</h2>
+
+<p>Since all the data wrangling was done with R, we retrieved the data for each plot using the same code:</p>
+
+<pre><code>    df1 &lt;- eventReactive(input$clicks1, {data.frame(fromJSON(getURL(URLencode(gsub(&quot;\n&quot;, &quot; &quot;, &#39;skipper.cs.utexas.edu:5001/rest/native/?query=
+                                        &quot;select * from NYC_DEATHS;&quot;
+                                        &#39;)), httpheader=c(DB=&#39;jdbc:oracle:thin:@sayonara.microlab.cs.utexas.edu:1521:orcl&#39;, USER=&#39;C##cs329e_cdt932&#39;, PASS=&#39;orcl_cdt932&#39;, 
+                                        MODE=&#39;native_mode&#39;, MODEL=&#39;model&#39;, returnDimensions = &#39;False&#39;, returnFor = &#39;JSON&#39;), verbose = TRUE)))
+    })
+
+</code></pre>
+
 <h2>Visualizations</h2>
 
 <p><a href="https://internal.shinyapps.io/agent509/02Shiny/?initialWidth=1362&amp;childId=shinyapp#shiny-tab-scatter">We created a simple scatterplot</a> of death counts broken down by ethnicity over the years. No real datawrangling was necessary to generate this plot so there&#39;s not much to say about it. We have a button that&#39;s used before updating data:</p>
